@@ -4,7 +4,7 @@ import { RegisterBodyDTO, RegisterResDTO } from 'src/routes/auth/auth.dto'
 
 import { AuthService } from 'src/routes/auth/auth.service'
 
-@Controller('auth')
+@Controller('/v1/api/auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
