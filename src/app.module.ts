@@ -7,9 +7,18 @@ import { ZodSerializerInterceptor } from 'nestjs-zod'
 import CustomZodValidationPipe from 'src/shared/pipes/custom-zod-validation.pipe'
 import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core'
 import { HttpExceptionFilter } from 'src/shared/filters/http-exception.filter'
+import { ServeStaticModule } from '@nestjs/serve-static'
+import { join } from 'path'
 
 @Module({
-  imports: [SharedModule, AuthModule],
+  imports: [
+    SharedModule,
+    AuthModule,
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, 'shared/images'),
+      serveRoot: '/images',
+    }),
+  ],
   controllers: [AppController],
   providers: [
     AppService,

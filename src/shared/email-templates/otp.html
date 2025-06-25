@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Xác nhận mã OTP</title>
+  </head>
+  <body style="background-color: #f4f4f4; font-family: 'Helvetica Neue', sans-serif; padding: 20px">
+    <div
+      style="
+        max-width: 500px;
+        margin: auto;
+        background-color: #fff;
+        border-radius: 10px;
+        padding: 30px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+      "
+    >
+      <div style="text-align: center">
+        <img src="{{logo}}" alt="Logo" style="max-height: 50px; margin-bottom: 20px" />
+        <h2 style="color: #333">Xác thực hành động</h2>
+      </div>
+      <p style="font-size: 16px; color: #555">
+        👋 Chúng tôi nhận thấy bạn đang thực hiện hành động trên
+        <a href="https://vuonghongky.id.vn" style="color: #007bff; text-decoration: none">vuonghongky.id.vn</a>.
+      </p>
+
+      <p style="font-size: 18px; margin: 20px 0; text-align: center">
+        <strong
+          style="
+            background-color: #f0f0f0;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 24px;
+            letter-spacing: 4px;
+            display: inline-block;
+          "
+        >
+          {{code}}
+        </strong>
+      </p>
+
+      <p style="font-size: 15px; color: #777">
+        ✨ Nếu bạn không phải là người thực hiện hành động này, xin vui lòng bỏ qua email.
+      </p>
+
+      <hr style="margin: 30px 0" />
+      <p style="font-size: 12px; color: #aaa; text-align: center">Đây là email tự động, vui lòng không trả lời.</p>
+    </div>
+  </body>
+</html>

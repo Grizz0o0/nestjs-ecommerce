@@ -21,3 +21,9 @@ export const UserStatus = {
   INACTIVE: 'INACTIVE',
   BLOCKED: 'BLOCKED',
 } as const
+
+export const TypeOfValidationCode = {
+  REGISTER: 'REGISTER',
+  FORGOT_PASSWORD: 'FORGOT_PASSWORD',
+} as const
+export type TypeOfValidationCodeType = (typeof TypeOfValidationCode)[keyof typeof TypeOfValidationCode]
