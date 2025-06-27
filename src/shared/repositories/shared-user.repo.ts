@@ -6,7 +6,7 @@ import { PrismaService } from 'src/shared/services/prisma.service'
 export class SharedUserRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async finUnique(uniqueObject: { email: string } | { id: number }): Promise<UserType | null> {
+  async findUnique(uniqueObject: { email: string } | { id: number }): Promise<UserType | null> {
     return this.prismaService.user.findUnique({ where: uniqueObject })
   }
 }

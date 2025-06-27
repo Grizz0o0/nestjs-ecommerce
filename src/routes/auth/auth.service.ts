@@ -12,6 +12,8 @@ import ms from 'ms'
 import envConfig from 'src/shared/config'
 import { TypeOfValidationCode } from 'src/shared/constants/auth.constant'
 import { EmailService } from 'src/shared/services/email.service'
+import { LoginBodyDTO } from 'src/routes/auth/auth.dto'
+import { AccessTokenPayloadCreate } from 'src/types/jwt.type'
 
 @Injectable()
 export class AuthService {
@@ -66,7 +68,7 @@ export class AuthService {
 
   async sendOTP(body: SendOTPBodyType) {
     // 1. Kiểm tra xem email đã tồn tại trong hệ thống chưa
-    const user = await this.sharedUserRepository.finUnique({ email: body.email })
+    const user = await this.sharedUserRepository.findUnique({ email: body.email })
     if (user) {
       throw new UnauthorizedException([
         {
@@ -86,7 +88,7 @@ export class AuthService {
     })
 
     // 3. Gửi mã xác thực đến email
-    const { data, error } = await this.emailService.sendOTP({
+    const { error } = await this.emailService.sendOTP({
       email: body.email,
       code,
     })
@@ -103,42 +105,58 @@ export class AuthService {
     return validationCode
   }
 
-  async login(body: any) {
-    const user = await this.prismaService.user.findUnique({
-      where: {
-        email: body.email,
-      },
-    })
-
-    if (!user) {
-      throw new UnauthorizedException('Account is not exist')
-    }
+  async login(body: LoginBodyDTO & { userAgent: string; ip: string }) {
+    const user = await this.authRepository.findUniqueUserIncludeRole({ email: body.email })
+    if (!user)
+      throw new UnauthorizedException([
+        {
+          message: 'Email chưa được đăng ký',
+          path: 'email',
+        },
+      ])
 
     const isPasswordMatch = await this.hashingService.compare(body.password, user.password)
-    if (!isPasswordMatch) {
+    if (!isPasswordMatch)
       throw new UnprocessableEntityException([
         {
           field: 'password',
-          error: 'Password is incorrect',
+          error: 'Mật khẩu không khớp',
         },
       ])
-    }
-    const tokens = await this.generateTokens({ userId: user.id })
+
+    const device = await this.authRepository.createDevice({
+      userId: user.id,
+      userAgent: body.userAgent,
+      ip: body.ip,
+    })
+    const tokens = await this.generateTokens({
+      userId: user.id,
+      deviceId: device.id,
+      roleId: user.roleId,
+      roleName: user.role.name,
+    })
+
     return tokens
   }
 
-  async generateTokens(payload: { userId: number }) {
+  async generateTokens({ userId, deviceId, roleId, roleName }: AccessTokenPayloadCreate) {
     const [accessToken, refreshToken] = await Promise.all([
-      this.tokenService.signAccessToken(payload),
-      this.tokenService.signRefreshToken(payload),
+      this.tokenService.signAccessToken({
+        userId,
+        deviceId,
+        roleId,
+        roleName,
+      }),
+      this.tokenService.signRefreshToken({
+        userId,
+      }),
     ])
     const decodedRefreshToken = await this.tokenService.verifyRefreshToken(refreshToken)
-    await this.prismaService.refreshToken.create({
-      data: {
-        token: refreshToken,
-        userId: payload.userId,
-        expiresAt: new Date(decodedRefreshToken.exp * 1000),
-      },
+    await this.authRepository.createRefreshToken({
+      userId,
+      deviceId,
+      expiresAt: new Date(decodedRefreshToken.exp * 1000),
+      token: refreshToken,
     })
     return { accessToken, refreshToken }
   }
@@ -160,7 +178,7 @@ export class AuthService {
         },
       })
       // 4. Tạo mới accessToken và refreshToken
-      return await this.generateTokens({ userId })
+      // return await this.generateTokens({ userId })
     } catch (error) {
       // Trường hợp đã refresh token rồi, hãy thông báo cho user biết
       // refresh token của họ đã bị đánh cắp
