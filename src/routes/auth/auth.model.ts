@@ -44,15 +44,6 @@ export const SendOTPBodySchema = z
   })
   .strict()
 
-export const SendOTPResSchema = z.object({
-  id: z.number(),
-  email: z.string().email(),
-  code: z.string(),
-  type: z.nativeEnum(TypeOfValidationCode),
-  expiresAt: z.date(),
-  createdAt: z.date(),
-})
-
 export const LoginBodySchema = UserSchema.pick({
   email: true,
   password: true,
@@ -107,7 +98,6 @@ export type RegisterBodyType = z.infer<typeof RegisterBodySchema>
 export type RegisterResType = z.infer<typeof RegisterResSchema>
 export type ValidationCodeType = z.infer<typeof ValidationCode>
 export type SendOTPBodyType = z.infer<typeof SendOTPBodySchema>
-export type SendOTPResType = z.infer<typeof SendOTPResSchema>
 export type LoginBodyType = z.infer<typeof LoginBodySchema>
 export type LoginResType = z.infer<typeof LoginResSchema>
 export type DeviceType = z.infer<typeof DeviceSchema>
