@@ -1,14 +1,23 @@
-import { HttpException, Injectable, UnauthorizedException, UnprocessableEntityException } from '@nestjs/common'
+import { HttpException, Injectable } from '@nestjs/common'
 import { addMilliseconds } from 'date-fns'
+import ms from 'ms'
 import { RefreshTokenBodyType, RegisterBodyType, SendOTPBodyType } from 'src/routes/auth/auth.model'
+import {
+  EmailAlreadyExistsException,
+  EmailNotFoundException,
+  FailedToSendOTPException,
+  InvalidOTPException,
+  InvalidPasswordException,
+  OTPExpiredException,
+  RefreshTokenAlreadyUsedException,
+  UnauthorizedAccessException,
+} from 'src/routes/auth/error.model'
 import { AuthRepository } from 'src/routes/auth/auth.repo'
 import { RolesService } from 'src/routes/auth/roles.service'
-import { generateOTP, isNotFoundPrismaError, isUniqueConstraintPrismaError } from 'src/shared/helpers'
+import { generateOTP, isUniqueConstraintPrismaError } from 'src/shared/helpers'
 import { SharedUserRepository } from 'src/shared/repositories/shared-user.repo'
 import { HashingService } from 'src/shared/services/hashing.service'
-import { PrismaService } from 'src/shared/services/prisma.service'
 import { TokenService } from 'src/shared/services/token.service'
-import ms from 'ms'
 import envConfig from 'src/shared/config'
 import { TypeOfValidationCode } from 'src/shared/constants/auth.constant'
 import { EmailService } from 'src/shared/services/email.service'
@@ -19,7 +28,6 @@ import { AccessTokenPayloadCreate } from 'src/types/jwt.type'
 export class AuthService {
   constructor(
     private readonly hashingService: HashingService,
-    private readonly prismaService: PrismaService,
     private readonly tokenService: TokenService,
     private readonly rolesService: RolesService,
     private readonly authRepository: AuthRepository,
@@ -33,21 +41,8 @@ export class AuthService {
         code: body.code,
         type: TypeOfValidationCode.REGISTER,
       })
-      if (!validationCode)
-        throw new UnauthorizedException([
-          {
-            message: 'Mã xác thực OTP không hợp lệ',
-            path: 'code',
-          },
-        ])
-
-      if (validationCode.expiresAt < new Date())
-        throw new UnauthorizedException([
-          {
-            message: 'Mã xác thực OTP đã hết hạn',
-            path: 'code',
-          },
-        ])
+      if (!validationCode) throw InvalidOTPException
+      if (validationCode.expiresAt < new Date()) throw OTPExpiredException
 
       const clientRoleId = await this.rolesService.getClientRoleId()
       const hashedPassword = await this.hashingService.hash(body.password)
@@ -59,9 +54,7 @@ export class AuthService {
         roleId: clientRoleId,
       })
     } catch (error) {
-      if (isUniqueConstraintPrismaError(error)) {
-        throw new UnauthorizedException([{ message: 'Email đã tồn tại trong hệ thống', path: 'email' }])
-      }
+      if (isUniqueConstraintPrismaError(error)) throw EmailAlreadyExistsException
       throw error
     }
   }
@@ -69,18 +62,11 @@ export class AuthService {
   async sendOTP(body: SendOTPBodyType) {
     // 1. Kiểm tra xem email đã tồn tại trong hệ thống chưa
     const user = await this.sharedUserRepository.findUnique({ email: body.email })
-    if (user) {
-      throw new UnauthorizedException([
-        {
-          message: 'Email đã tồn tại trong hệ thống',
-          path: 'email',
-        },
-      ])
-    }
+    if (user) throw EmailAlreadyExistsException
 
     // 2. Tạo mã xác thực mới
     const code = generateOTP()
-    const validationCode = await this.authRepository.createValidationCode({
+    await this.authRepository.createValidationCode({
       email: body.email,
       code,
       type: body.type,
@@ -93,36 +79,17 @@ export class AuthService {
       code,
     })
 
-    if (error) {
-      throw new UnauthorizedException([
-        {
-          message: 'Gửi mã xác thực OTP thất bại',
-          path: 'email',
-        },
-      ])
-    }
+    if (error) throw FailedToSendOTPException
 
     return { message: 'Mã xác thực OTP đã được gửi đến email của bạn' }
   }
 
   async login(body: LoginBodyDTO & { userAgent: string; ip: string }) {
     const user = await this.authRepository.findUniqueUserIncludeRole({ email: body.email })
-    if (!user)
-      throw new UnauthorizedException([
-        {
-          message: 'Email chưa được đăng ký',
-          path: 'email',
-        },
-      ])
+    if (!user) throw EmailNotFoundException
 
     const isPasswordMatch = await this.hashingService.compare(body.password, user.password)
-    if (!isPasswordMatch)
-      throw new UnprocessableEntityException([
-        {
-          field: 'password',
-          error: 'Mật khẩu không khớp',
-        },
-      ])
+    if (!isPasswordMatch) throw InvalidPasswordException
 
     const device = await this.authRepository.createDevice({
       userId: user.id,
@@ -161,7 +128,11 @@ export class AuthService {
     return { accessToken, refreshToken }
   }
 
-  async refreshToken({ refreshToken, ip, userAgent }: RefreshTokenBodyType & { ip: string; userAgent: string }) {
+  async refreshToken({
+    refreshToken,
+    ip,
+    userAgent,
+  }: RefreshTokenBodyType & { ip: string; userAgent: string }) {
     try {
       // 1. Kiểm tra refreshToken có hợp lệ không
       const { userId } = await this.tokenService.verifyRefreshToken(refreshToken)
@@ -169,14 +140,7 @@ export class AuthService {
       const refreshTokenInDb = await this.authRepository.findUniqueRefreshTokenIncludeUserRole({
         token: refreshToken,
       })
-      if (!refreshTokenInDb) {
-        throw new UnauthorizedException([
-          {
-            message: 'Refresh token không hợp lệ hoặc đã bị thu hồi',
-            path: 'refreshToken',
-          },
-        ])
-      }
+      if (!refreshTokenInDb) throw RefreshTokenAlreadyUsedException
 
       const {
         deviceId,
@@ -204,7 +168,7 @@ export class AuthService {
       if (error instanceof HttpException) {
         throw error
       }
-      throw new UnauthorizedException()
+      throw UnauthorizedAccessException
     }
   }
 
@@ -213,16 +177,18 @@ export class AuthService {
       // 1. Kiểm tra refreshToken có hợp lệ không
       await this.tokenService.verifyRefreshToken(refreshToken)
       // 2. Xóa refreshToken trong database
-      const deleteRefreshToken = await this.authRepository.deleteRefreshToken({ token: refreshToken })
+      const deleteRefreshToken = await this.authRepository.deleteRefreshToken({
+        token: refreshToken,
+      })
       // 3. Cập nhật device là đã logout
       await this.authRepository.updateDevice(deleteRefreshToken.deviceId, { isActive: false })
 
       return { message: 'Đăng xuất thành công' }
     } catch (error) {
       if (error instanceof HttpException) {
-        throw error
+        throw RefreshTokenAlreadyUsedException
       }
-      throw new UnauthorizedException()
+      throw UnauthorizedAccessException
     }
   }
 }

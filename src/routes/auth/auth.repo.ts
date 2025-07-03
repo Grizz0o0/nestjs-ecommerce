@@ -15,7 +15,7 @@ export class AuthRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
   async createUser(
-    user: Omit<RegisterBodyType, 'confirmPassword' | 'code'> & Pick<UserType, 'roleId'>,
+    user: Pick<UserType, 'email' | 'password' | 'name' | 'phoneNumber' | 'roleId'>,
   ): Promise<Omit<UserType, 'password' | 'totpSecret'>> {
     return this.prismaService.user.create({
       data: user,
@@ -42,24 +42,44 @@ export class AuthRepository {
   }
 
   async findUniqueValidationCode(
-    uniqueValue: { email: string } | { id: number } | { email: string; code: string; type: TypeOfValidationCodeType },
+    uniqueValue:
+      | { email: string }
+      | { id: number }
+      | { email: string; code: string; type: TypeOfValidationCodeType },
   ): Promise<ValidationCodeType | null> {
     return this.prismaService.verificationCode.findUnique({
       where: uniqueValue,
     })
   }
 
-  async createRefreshToken(data: { userId: number; deviceId: number; expiresAt: Date; token: string }) {
+  async createRefreshToken(data: {
+    userId: number
+    deviceId: number
+    expiresAt: Date
+    token: string
+  }) {
     return this.prismaService.refreshToken.create({
       data,
     })
   }
 
   async createDevice(
-    data: Pick<DeviceType, 'userId' | 'userAgent' | 'ip'> & Partial<Pick<DeviceType, 'lastActive' | 'isActive'>>,
+    data: Pick<DeviceType, 'userId' | 'userAgent' | 'ip'> &
+      Partial<Pick<DeviceType, 'lastActive' | 'isActive'>>,
   ) {
     return this.prismaService.device.create({
       data,
+    })
+  }
+
+  async createUserIncludeRole(
+    user: Pick<UserType, 'email' | 'password' | 'name' | 'phoneNumber' | 'roleId' | 'avatar'>,
+  ): Promise<UserType & { role: RoleType }> {
+    return this.prismaService.user.create({
+      data: user,
+      include: {
+        role: true,
+      },
     })
   }
 
