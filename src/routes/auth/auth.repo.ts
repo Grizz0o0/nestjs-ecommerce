@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common'
 import {
   DeviceType,
   RefreshTokenType,
-  RegisterBodyType,
   RoleType,
   ValidationCodeType,
 } from 'src/routes/auth/auth.model'
@@ -31,7 +30,11 @@ export class AuthRepository {
   ): Promise<ValidationCodeType> {
     return this.prismaService.verificationCode.upsert({
       where: {
-        email: payload.email,
+        email_code_type: {
+          email: payload.email,
+          code: payload.code,
+          type: payload.type,
+        },
       },
       create: payload,
       update: {
@@ -43,9 +46,14 @@ export class AuthRepository {
 
   async findUniqueValidationCode(
     uniqueValue:
-      | { email: string }
       | { id: number }
-      | { email: string; code: string; type: TypeOfValidationCodeType },
+      | {
+          email_code_type: {
+            email: string
+            code: string
+            type: TypeOfValidationCodeType
+          }
+        },
   ): Promise<ValidationCodeType | null> {
     return this.prismaService.verificationCode.findUnique({
       where: uniqueValue,
@@ -122,9 +130,14 @@ export class AuthRepository {
 
   async deleteVerificationCode(
     uniqueObject:
-      | { email: string }
       | { id: number }
-      | { email: string; code: string; type: TypeOfValidationCodeType },
+      | {
+          email_code_type: {
+            email: string
+            code: string
+            type: TypeOfValidationCodeType
+          }
+        },
   ): Promise<ValidationCodeType> {
     return this.prismaService.verificationCode.delete({ where: uniqueObject })
   }

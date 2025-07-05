@@ -25,5 +25,8 @@ export const UserStatus = {
 export const TypeOfValidationCode = {
   REGISTER: 'REGISTER',
   FORGOT_PASSWORD: 'FORGOT_PASSWORD',
+  LOGIN: 'LOGIN',
+  DISABLE_2FA: 'DISABLE_2FA',
 } as const
-export type TypeOfValidationCodeType = (typeof TypeOfValidationCode)[keyof typeof TypeOfValidationCode]
+export type TypeOfValidationCodeType =
+  (typeof TypeOfValidationCode)[keyof typeof TypeOfValidationCode]
