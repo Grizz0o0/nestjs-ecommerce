@@ -21,7 +21,7 @@ import {
   TOTPAlreadyEnabledException,
   TOTPNotEnabledException,
   UnauthorizedAccessException,
-} from 'src/routes/auth/error.model'
+} from 'src/routes/auth/auth.errror'
 import { AuthRepository } from 'src/routes/auth/auth.repo'
 import { RolesService } from 'src/routes/auth/roles.service'
 import { generateOTP, isUniqueConstraintPrismaError } from 'src/shared/helpers'

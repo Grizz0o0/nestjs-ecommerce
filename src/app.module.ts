@@ -9,11 +9,13 @@ import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core'
 import { HttpExceptionFilter } from 'src/shared/filters/http-exception.filter'
 import { ServeStaticModule } from '@nestjs/serve-static'
 import { join } from 'path'
+import { LanguageModule } from './routes/language/language.module'
 
 @Module({
   imports: [
     SharedModule,
     AuthModule,
+    LanguageModule,
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, 'shared/images'),
       serveRoot: '/images',

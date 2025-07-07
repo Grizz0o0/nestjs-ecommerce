@@ -31,11 +31,4 @@ export class TwoFactorAuthService {
 }
 
 const twoFactorAuthService = new TwoFactorAuthService()
-console.log(
-  twoFactorAuthService.verifyTOTP({
-    email: 'vuonghongky1@gmail.com',
-    secret: 'XWVZAERH2UCAJ6QMYAZGK2JZEUQ7H2MX',
-    token: '003062',
-  }),
-)
 export default twoFactorAuthService
