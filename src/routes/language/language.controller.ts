@@ -10,12 +10,13 @@ import {
   Post,
 } from '@nestjs/common'
 import { ZodSerializerDto } from 'nestjs-zod'
-import { GetLanguageDetailResDTO, GetLanguagesResDTO } from 'src/routes/language/language.dto'
 import {
-  CreateLanguageBodyType,
-  GetLanguageParamsType,
-  UpdateLanguageBodyType,
-} from 'src/routes/language/language.model'
+  GetLanguageDetailResDTO,
+  GetLanguagesResDTO,
+  CreateLanguageBodyDTO,
+  GetLanguageParamsDTO,
+  UpdateLanguageBodyDTO,
+} from 'src/routes/language/language.dto'
 import { LanguageService } from 'src/routes/language/language.service'
 import { ActiveUser } from 'src/shared/decorators/active-user.decorator'
 import { IsPublic } from 'src/shared/decorators/auth.decorator'
@@ -37,14 +38,14 @@ export class LanguageController {
   @HttpCode(HttpStatus.OK)
   @ZodSerializerDto(GetLanguageDetailResDTO)
   @IsPublic()
-  findById(@Param('id') params: GetLanguageParamsType) {
+  findById(@Param() params: GetLanguageParamsDTO) {
     return this.languageService.findById(params.languageId)
   }
 
   @Post('')
   @HttpCode(HttpStatus.CREATED)
   @ZodSerializerDto(GetLanguageDetailResDTO)
-  create(@Body() body: CreateLanguageBodyType, @ActiveUser('userId') userId: number) {
+  create(@Body() body: CreateLanguageBodyDTO, @ActiveUser('userId') userId: number) {
     return this.languageService.create({
       data: body,
       createdById: userId,
@@ -55,8 +56,8 @@ export class LanguageController {
   @HttpCode(HttpStatus.OK)
   @ZodSerializerDto(GetLanguageDetailResDTO)
   update(
-    @Param() params: GetLanguageParamsType,
-    @Body() body: UpdateLanguageBodyType,
+    @Param() params: GetLanguageParamsDTO,
+    @Body() body: UpdateLanguageBodyDTO,
     @ActiveUser('userId') userId: number,
   ) {
     return this.languageService.update({ id: params.languageId, data: body, updatedById: userId })
@@ -65,7 +66,7 @@ export class LanguageController {
   @Delete(':languageId')
   @HttpCode(HttpStatus.OK)
   @ZodSerializerDto(MessageResDTO)
-  delete(@Param() params: GetLanguageParamsType) {
-    return this.languageService.delete(params.languageId)
+  delete(@Param() params: GetLanguageParamsDTO, @ActiveUser('userId') userId: number) {
+    return this.languageService.delete({ id: params.languageId, deletedById: userId })
   }
 }

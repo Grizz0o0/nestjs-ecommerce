@@ -7,12 +7,12 @@ import {
   UpdateLanguageBodySchema,
 } from 'src/routes/language/language.model'
 
-export const GetLanguagesResDTO = createZodDto(GetLanguagesResSchema)
+export class GetLanguagesResDTO extends createZodDto(GetLanguagesResSchema) {}
 
-export const GetLanguageDetailResDTO = createZodDto(GetLanguageDetailResSchema)
+export class GetLanguageDetailResDTO extends createZodDto(GetLanguageDetailResSchema) {}
 
-export const GetLanguageParamsDTO = createZodDto(GetLanguageParamsSchema)
+export class GetLanguageParamsDTO extends createZodDto(GetLanguageParamsSchema) {}
 
-export const CreateLanguageBodyDTO = createZodDto(CreateLanguageBodySchema)
+export class CreateLanguageBodyDTO extends createZodDto(CreateLanguageBodySchema) {}
 
-export const UpdateLanguageBodyDTO = createZodDto(UpdateLanguageBodySchema)
+export class UpdateLanguageBodyDTO extends createZodDto(UpdateLanguageBodySchema) {}

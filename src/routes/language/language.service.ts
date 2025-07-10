@@ -45,7 +45,6 @@ export class LanguageService {
     data: UpdateLanguageBodyType
     updatedById: number
   }) {
-    console.log(`id: ${id}, data: ${JSON.stringify(data)}`)
     try {
       return await this.languageRepo.update({ id, data, updatedById })
     } catch (error) {
@@ -54,10 +53,10 @@ export class LanguageService {
     }
   }
 
-  async delete(id: string) {
+  async delete({ id, deletedById }: { id: string; deletedById: number }) {
     try {
       // hard delete
-      await this.languageRepo.delete(id, true)
+      await this.languageRepo.delete({ id, deletedById, isHard: true })
       return { message: 'Delete successfully' }
     } catch (error) {
       if (isNotFoundPrismaError(error)) throw NotFoundRecordException
