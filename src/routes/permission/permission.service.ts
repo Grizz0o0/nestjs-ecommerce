@@ -65,7 +65,7 @@ export class PermissionService {
   async delete({ id, deletedById }: { id: number; deletedById: number }) {
     try {
       // hard delete
-      await this.permissionRepo.delete({ id, deletedById, isHard: true })
+      await this.permissionRepo.delete({ id, deletedById })
       return { message: 'Delete successfully' }
     } catch (error) {
       if (isNotFoundPrismaError(error)) throw NotFoundRecordException

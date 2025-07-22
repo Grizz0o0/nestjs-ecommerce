@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common'
 import {
   CreatePermissionBodyType,
-  PermissionType,
   UpdatePermissionBodyType,
 } from 'src/routes/permission/permission.model'
+import { PermissionType } from 'src/shared/model/shared-permisssion.model'
 import { PrismaService } from 'src/shared/services/prisma.service'
 
 @Injectable()
@@ -69,7 +69,7 @@ export class PermissionRepo {
       ? this.prismaService.permission.delete({ where: { id } })
       : this.prismaService.permission.update({
           where: { id, deletedAt: null },
-          data: { deletedById },
+          data: { deletedAt: new Date(), deletedById },
         })
   }
 }

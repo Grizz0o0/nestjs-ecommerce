@@ -99,17 +99,6 @@ export const RefreshTokenBodySchema = z
 
 export const RefreshTokenResSchema = LoginResSchema
 
-export const RoleSchema = z.object({
-  id: z.number(),
-  name: z.string(),
-  description: z.string().nullable(),
-  isActive: z.boolean(),
-  createdById: z.number().nullable(),
-  updatedById: z.number().nullable(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
-})
-
 export const LogoutBodySchema = RefreshTokenBodySchema
 
 export const GoogleAuthStateSchema = DeviceSchema.pick({
@@ -166,7 +155,6 @@ export const TwoFactorSetupResSchema = z.object({
   uri: z.string(),
 })
 
-export type RoleType = z.infer<typeof RoleSchema>
 export type RegisterBodyType = z.infer<typeof RegisterBodySchema>
 export type RegisterResType = z.infer<typeof RegisterResSchema>
 export type ValidationCodeType = z.infer<typeof ValidationCode>

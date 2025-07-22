@@ -11,6 +11,7 @@ import { ServeStaticModule } from '@nestjs/serve-static'
 import { join } from 'path'
 import { LanguageModule } from './routes/language/language.module'
 import { PermissionModule } from './routes/permission/permission.module';
+import { RoleModule } from './routes/role/role.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { PermissionModule } from './routes/permission/permission.module';
       serveRoot: '/images',
     }),
     PermissionModule,
+    RoleModule,
   ],
   controllers: [AppController],
   providers: [
